@@ -25,9 +25,13 @@ public class App
     	
     	
     	
-    	String html= HttpUtil.sendGet(url2);
+    	String html= HttpUtil.sendGet(url2,true);
     	
-    	System.out.println(html);
+    	String html2= HttpUtil.sendGet(html,true);
+    	
+    	String html3= HttpUtil.sendGet(html2,true);
+    	
+    	System.out.println(html3);
        
     	//if(result.getRedirectUrl()!=null && result.getRedirectUrl().length()>0)
     	//{

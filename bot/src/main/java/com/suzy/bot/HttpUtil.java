@@ -35,9 +35,14 @@ public class HttpUtil {
 	private static CookieManager manager = new CookieManager();
 
 	
+	public static String sendGet(String url )throws IOException 
+	{
+		return sendGet(url,false);
+	}
 
-	public static String sendGet(String url) throws IOException {
+	public static String sendGet(String url ,boolean getLocation) throws IOException {
 
+		CookieHandler.setDefault(manager);
 		InputStream inputStream = null;
 		InputStreamReader inputStreamReader = null;
 		BufferedReader reader = null;
@@ -86,6 +91,13 @@ public class HttpUtil {
 			inputStreamReader = new InputStreamReader(inputStream);
 			reader = new BufferedReader(inputStreamReader);
 
+			String location = connection.getHeaderField("Location");
+			System.out.println("302 Found！" + location);
+			if(getLocation && location!=null && location.length()>0)
+				return location;
+				 
+	
+			
 			while ((tempLine = reader.readLine()) != null) {
 				resultBuffer.append(tempLine);
 			}
