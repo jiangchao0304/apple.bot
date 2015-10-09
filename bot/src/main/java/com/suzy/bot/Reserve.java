@@ -21,7 +21,7 @@ public class Reserve {
 
 	public static List<Stores> GetStores() throws IOException {
 		
-		String jsonString=HttpUtil.sendGet("https://reserve.cdn-apple.com/HK/zh_HK/reserve/iPhone/stores.json", "").getPageHtml();
+		String jsonString=HttpUtil.sendGet("https://reserve.cdn-apple.com/HK/zh_HK/reserve/iPhone/stores.json");
 	     
 
 		
@@ -39,7 +39,7 @@ public class Reserve {
 	
 public static List<Stores> GetAvailability() throws IOException{
 		
-		String jsonString=HttpUtil.sendGet("https://reserve.cdn-apple.com/HK/zh_HK/reserve/iPhone/availability.json", "").getPageHtml();
+		String jsonString=HttpUtil.sendGet("https://reserve.cdn-apple.com/HK/zh_HK/reserve/iPhone/availability.json");
 	     
 
 		
@@ -58,7 +58,7 @@ public static List<Stores> GetAvailability() throws IOException{
    public static void Open(String url) throws IOException {
 	
 	   
-	  String firstHtml=  HttpUtil.sendGet(url,"").getPageHtml();
+	  String firstHtml=  HttpUtil.sendGet(url);
 	  
 	  
 
@@ -69,10 +69,10 @@ public static List<Stores> GetAvailability() throws IOException{
 	   
    }
    
-   public static PageResult SelectStore(String url) throws IOException {
+   public static String SelectStore(String url) throws IOException {
 		
 	   
-		  return HttpUtil.sendGet(url,"");
+		  return HttpUtil.sendGet(url);
 		  
 		 
 		   

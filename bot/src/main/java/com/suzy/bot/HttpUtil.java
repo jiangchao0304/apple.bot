@@ -13,111 +13,28 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import com.suzy.entity.PageResult;
 
 public class HttpUtil {
 
-	static String sCookie = "";
 
-	public static PageResult sendGet(String url, String param)
-			throws IOException {
+	private static CookieManager manager = new CookieManager();
 
-		PageResult result = new PageResult();
-
-		InputStream inputStream = null;
-		InputStreamReader inputStreamReader = null;
-		BufferedReader reader = null;
-		StringBuffer resultBuffer = new StringBuffer();
-		String tempLine = null;
-
-		try {
-			String urlNameString = url;
-
-			if (param.length() > 0)
-				urlNameString += "?" + param;
-
-			URL realUrl = new URL(urlNameString);
-			// 打开和URL之间的连接
-			// URLConnection connection = realUrl.openConnection();
-
-			HttpURLConnection connection = (HttpURLConnection) realUrl
-					.openConnection();
-
-			connection.setInstanceFollowRedirects(false);
-
-			if (sCookie != null && sCookie.length() > 0) {
-				connection.setRequestProperty("Cookie", sCookie);
-			}
-
-			// 设置通用的请求属性
-			connection.setRequestProperty("accept", "*/*");
-			connection.setRequestProperty("connection", "Keep-Alive");
-			connection.setRequestProperty("user-agent",
-					"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1;SV1)");
-			// 建立实际的连接
-			connection.connect();
-
-			// 获取所有响应头字段
-			Map<String, List<String>> map = connection.getHeaderFields();
-			// 遍历所有的响应头字段
-			for (String key : map.keySet()) {
-
-				if (key != null && key.equalsIgnoreCase("set-cookie")) {
-
-					String responseCookie = map.get(key).toString();
-
-					if (responseCookie != null && responseCookie.length() > 0) {
-						sCookie = responseCookie;
-						System.out.print("cookies=" + responseCookie);
-					}
-
-				}
-
-				// System.out.println(key + "--->" + map.get(key));
-
-			}
-
-			String location = connection.getHeaderField("Location");
-
-			if (location != null && location.length() > 0) {
-				result.setRedirectUrl(location);
-				System.out.println("\r\n跳转地址:" + location);
-
-			}
-
-			// 定义 BufferedReader输入流来读取URL的响应
-			inputStream = connection.getInputStream();
-			inputStreamReader = new InputStreamReader(inputStream);
-			reader = new BufferedReader(inputStreamReader);
-
-			while ((tempLine = reader.readLine()) != null) {
-				resultBuffer.append(tempLine);
-			}
-
-		} catch (Exception e) {
-			System.out.println("发送GET请求出现异常！" + e);
-			e.printStackTrace();
-		}
-		// 使用finally块来关闭输入流
-		finally {
-			if (reader != null) {
-				reader.close();
-			}
-
-			if (inputStreamReader != null) {
-				inputStreamReader.close();
-			}
-
-			if (inputStream != null) {
-				inputStream.close();
-			}
-		}
-		result.setPageHtml(resultBuffer.toString());
-		return result;
-	}
+	
 
 	public static String sendGet(String url) throws IOException {
 
@@ -126,47 +43,42 @@ public class HttpUtil {
 		BufferedReader reader = null;
 		StringBuffer resultBuffer = new StringBuffer();
 		String tempLine = null;
-
+		
 		try {
+			
+			SSLContext sslcontext = SSLContext.getInstance("TLS"); 
+			sslcontext.init(null, new TrustManager[]{myX509TrustManager}, new java.security.SecureRandom());
+			
+
 			String urlNameString = url;
 
 			URL realUrl = new URL(urlNameString);
-
-			HttpURLConnection connection = (HttpURLConnection) realUrl.openConnection();
 			
+			HttpsURLConnection connection = (HttpsURLConnection) realUrl.openConnection();
+			
+			connection.setSSLSocketFactory(sslcontext.getSocketFactory());
+			connection.setHostnameVerifier(
+			new HostnameVerifier()
+            {
+
+                public boolean verify(String hostname, SSLSession session)
+                {
+                   return true;
+                }
+             });
+			
+			CookieHandler.setDefault(manager);
 			connection.setRequestMethod("GET");
-			
-			if (sCookie != null && sCookie.length() > 0) {
-				connection.setRequestProperty("Cookie", sCookie);
-			}
-
-			// 设置通用的请求属性
+			connection.setInstanceFollowRedirects(false);
 			connection.setRequestProperty("accept", "*/*");
 			connection.setRequestProperty("connection", "Keep-Alive");
-			connection.setRequestProperty("user-agent",
-					"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1;SV1)");
-			// 建立实际的连接
+			connection.setRequestProperty("user-agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1;SV1)");
 			connection.connect();
 
-			
-			// 获取所有响应头字段
-			Map<String, List<String>> map = connection.getHeaderFields();
-			// 遍历所有的响应头字段
-			for (String key : map.keySet()) {
-
-				if (key != null && key.equalsIgnoreCase("set-cookie")) {
-
-					String responseCookie = map.get(key).toString();
-
-					if (responseCookie != null && responseCookie.length() > 0) {
-						sCookie = responseCookie;
-						System.out.print("cookies=" + responseCookie);
-					}
-
-				}
-
-
-
+			CookieStore cookieJar = manager.getCookieStore();
+			List<HttpCookie> cookies = cookieJar.getCookies();
+			for (HttpCookie cookie : cookies) {
+				System.out.println(cookie);
 			}
 
 			// 定义 BufferedReader输入流来读取URL的响应
@@ -199,9 +111,11 @@ public class HttpUtil {
 
 		return resultBuffer.toString();
 	}
-	
-	
-	public static String sendPost (String url,String params) throws IOException {
+
+	public static String sendPost(String url, String params) throws IOException {
+
+		
+		CookieHandler.setDefault(manager);
 
 		InputStream inputStream = null;
 		InputStreamReader inputStreamReader = null;
@@ -215,66 +129,38 @@ public class HttpUtil {
 			URL realUrl = new URL(urlNameString);
 
 			HttpURLConnection connection = (HttpURLConnection) realUrl.openConnection();
-			
+
 			connection.setRequestMethod("POST");
-			
 			connection.setDoOutput(true);
 			connection.setDoInput(true);
-			
-			if (sCookie != null && sCookie.length() > 0) {
-				connection.setRequestProperty("Cookie", sCookie);
-			}
-
 			connection.setInstanceFollowRedirects(false);
-			// 设置通用的请求属性
 			connection.setRequestProperty("accept", "*/*");
 			connection.setRequestProperty("connection", "Keep-Alive");
-			connection.setRequestProperty("user-agent",
-					"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1;SV1)");
-			// 建立实际的连接
+			connection.setRequestProperty("user-agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1;SV1)");
 			connection.connect();
 
-			
-			
 			DataOutputStream out = new DataOutputStream(connection.getOutputStream());
-			
+
 			out.writeBytes(params);
-			
+
 			out.flush();
-			
-	        out.close();
-	        
-	     // 获取所有响应头字段
-	     			Map<String, List<String>> map = connection.getHeaderFields();
-	     			// 遍历所有的响应头字段
-	     			for (String key : map.keySet()) {
 
-	     				if (key != null && key.equalsIgnoreCase("set-cookie")) {
+			out.close();
 
-	     					String responseCookie = map.get(key).toString();
+			CookieStore cookieJar = manager.getCookieStore();
+			List<HttpCookie> cookies = cookieJar.getCookies();
+			for (HttpCookie cookie : cookies) {
+				System.out.println(cookie);
+			}
 
-	     					if (responseCookie != null && responseCookie.length() > 0) {
-	     						sCookie = responseCookie;
-	     						System.out.print("cookies=" + responseCookie);
-	     					}
+			inputStream = connection.getInputStream();
 
-	     				}
+			inputStreamReader = new InputStreamReader(inputStream);
+			reader = new BufferedReader(inputStreamReader);
 
-	     				// System.out.println(key + "--->" + map.get(key));
-
-	     			}
-
-				 inputStream=connection.getInputStream();
-			        
-					inputStreamReader = new InputStreamReader(inputStream);
-					reader = new BufferedReader(inputStreamReader);
-
-					while ((tempLine = reader.readLine()) != null) {
-						resultBuffer.append(tempLine);
-					}
-	       
-			
-	       
+			while ((tempLine = reader.readLine()) != null) {
+				resultBuffer.append(tempLine);
+			}
 
 		} catch (Exception e) {
 			System.out.println("发送POST请求出现异常！" + e);
@@ -298,5 +184,24 @@ public class HttpUtil {
 		return resultBuffer.toString();
 	}
 
+	private static TrustManager myX509TrustManager = new X509TrustManager() { 
 
+	    public X509Certificate[] getAcceptedIssuers() { 
+	        //return null; 
+	    	return new java.security.cert.X509Certificate[0];
+	    } 
+
+	 
+	    public void checkServerTrusted(X509Certificate[] chain, String authType) 
+	    throws CertificateException { 
+	    } 
+
+	   
+	    public void checkClientTrusted(X509Certificate[] chain, String authType) 
+	    throws CertificateException { 
+	    } 
+	};
+	
+	
+	
 }

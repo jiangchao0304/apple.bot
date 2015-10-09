@@ -24,7 +24,10 @@ public class App
     	String url2="https://reserve-hk.apple.com/HK/zh_HK/reserve/iPhone?partNumber=MKQJ2ZP%2FA&channel=1&returnURL=http%3A%2F%2Fwww.apple.com%2Fhk-zh%2Fshop%2Fbuy-iphone%2Fiphone6s%2F4.7-%E5%90%8B%E8%9E%A2%E5%B9%95-16gb-%E5%A4%AA%E7%A9%BA%E7%81%B0&sourceID=&iPP=N&appleCare=N&carrier=&store=R485";
     	
     	
-    	//PageResult result= Reserve.SelectStore(url2);
+    	
+    	String html= HttpUtil.sendGet(url2);
+    	
+    	System.out.println(html);
        
     	//if(result.getRedirectUrl()!=null && result.getRedirectUrl().length()>0)
     	//{
@@ -32,8 +35,5 @@ public class App
     	//}
     	
     	
-        HttpUtil.sendGet("http://www.tvc-mall.com/User/Login/");
-       HttpUtil.sendPost("http://www.tvc-mall.com/Member/Login", "Email=jiangchao0304%40sina.com&Password=123456&RememberMe=true&RememberMe=false&submit=Login&ReturnUrl=");
-      String ssString= HttpUtil.sendGet("http://www.tvc-mall.com/User/index");
     }
 }
