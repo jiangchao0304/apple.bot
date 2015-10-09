@@ -158,13 +158,13 @@ public class HttpUtil {
 			out.flush();
 
 			out.close();
-
+		    /*
 			CookieStore cookieJar = manager.getCookieStore();
 			List<HttpCookie> cookies = cookieJar.getCookies();
 			for (HttpCookie cookie : cookies) {
 				System.out.println(cookie);
 			}
-
+ 	        */
 			inputStream = connection.getInputStream();
 
 			inputStreamReader = new InputStreamReader(inputStream);
