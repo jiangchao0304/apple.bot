@@ -80,11 +80,11 @@ public class HttpUtil {
 			connection.setRequestProperty("user-agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1;SV1)");
 			connection.connect();
 
-			CookieStore cookieJar = manager.getCookieStore();
-			List<HttpCookie> cookies = cookieJar.getCookies();
-			for (HttpCookie cookie : cookies) {
-				System.out.println(cookie);
-			}
+			//CookieStore cookieJar = manager.getCookieStore();
+			//List<HttpCookie> cookies = cookieJar.getCookies();
+			//for (HttpCookie cookie : cookies) {
+			//	System.out.println(cookie);
+			//}
 
 			// 定义 BufferedReader输入流来读取URL的响应
 			inputStream = connection.getInputStream();
@@ -92,9 +92,13 @@ public class HttpUtil {
 			reader = new BufferedReader(inputStreamReader);
 
 			String location = connection.getHeaderField("Location");
-			System.out.println("302 Found！" + location);
+			
 			if(getLocation && location!=null && location.length()>0)
+			{
+				System.out.println("302 Found！" + location);
 				return location;
+			}
+				
 				 
 	
 			
@@ -124,7 +128,7 @@ public class HttpUtil {
 		return resultBuffer.toString();
 	}
 
-	public static String sendPost(String url, String params) throws IOException {
+	public static String sendPost(String url, String params,Map<String,String> header) throws IOException {
 
 		
 		CookieHandler.setDefault(manager);
@@ -136,12 +140,28 @@ public class HttpUtil {
 		String tempLine = null;
 
 		try {
+			
+			SSLContext sslcontext = SSLContext.getInstance("TLS"); 
+			sslcontext.init(null, new TrustManager[]{myX509TrustManager}, new java.security.SecureRandom());
+			
 			String urlNameString = url;
 
 			URL realUrl = new URL(urlNameString);
 
-			HttpURLConnection connection = (HttpURLConnection) realUrl.openConnection();
+			HttpsURLConnection connection = (HttpsURLConnection) realUrl.openConnection();
+			connection.setSSLSocketFactory(sslcontext.getSocketFactory());
+			connection.setHostnameVerifier(
+			new HostnameVerifier()
+            {
 
+                public boolean verify(String hostname, SSLSession session)
+                {
+                   return true;
+                }
+             });
+			//connection.setRequestProperty("Content-Type", contentType);
+			//connection.setConnectTimeout(20000);  
+			//connection.setReadTimeout(300000);  
 			connection.setRequestMethod("POST");
 			connection.setDoOutput(true);
 			connection.setDoInput(true);
@@ -149,6 +169,15 @@ public class HttpUtil {
 			connection.setRequestProperty("accept", "*/*");
 			connection.setRequestProperty("connection", "Keep-Alive");
 			connection.setRequestProperty("user-agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1;SV1)");
+			
+			
+		    for(Map.Entry<String, String> entry : header.entrySet())   
+		    {   
+		    	connection.setRequestProperty(entry.getKey(), entry.getValue());
+ 
+		    }   
+			
+			
 			connection.connect();
 
 			DataOutputStream out = new DataOutputStream(connection.getOutputStream());

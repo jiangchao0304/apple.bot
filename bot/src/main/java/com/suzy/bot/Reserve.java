@@ -2,11 +2,13 @@ package com.suzy.bot;
 
 import java.io.IOException;
 import java.net.HttpRetryException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.alibaba.fastjson.JSONObject;
-import com.suzy.entity.PageResult;
 import com.suzy.entity.Stores;
 
 import org.htmlparser.*;
@@ -17,7 +19,8 @@ import org.htmlparser.util.NodeList;
 import org.htmlparser.util.ParserException;
 import org.htmlparser.util.ParserUtils;
 import org.htmlparser.visitors.TextExtractingVisitor;
-
+import java.util.HashMap;
+import java.util.Map;
 public class Reserve {
 
 	public static List<Stores> GetStores() throws IOException {
@@ -69,13 +72,38 @@ public class Reserve {
 	   
         String step1= HttpUtil.sendGet(sku,true);
     	
+        System.out.println("step1"+step1);
     	String step2= HttpUtil.sendGet(step1,true);
     	
+    	System.out.println("step2"+step2);
     	//拿到登录地址
     	String step3= HttpUtil.sendGet(step2,true);
     	
-    	String ss= HttpUtil.sendPost("https://signin.apple.com/appleauth/auth/signin", "{\"accountName\":\"14317048@qq.com\",\"password\":\"Jc19850304\",\"rememberMe\":false}");
+    	Matcher serviceKey =Pattern.compile("serviceKey: '(.*?)',").matcher(step3);
+    	serviceKey.find();
     	
+    	Matcher appId =Pattern.compile("requestorAppId: '(.*?)'").matcher(step3);
+    	appId.find();
+    	
+    	Matcher locale =Pattern.compile("locale: '(.*?)',").matcher(step3);
+    	locale.find();
+    	
+    	
+    	 
+        Map<String,String> header = new HashMap<String,String>();
+       
+    	header.put("X-Apple-Widget-Key", serviceKey.group(1));   //.group(1));
+    	header.put("X-Apple-I-FD-Client-Info", "");
+    	header.put("X-Apple-App-Id", appId.group(1));
+    	header.put("X-Apple-Locale", locale.group(1));
+    	header.put("X-Requested-With", "XMLHttpRequest");
+    	header.put("Referer", step2);
+    	header.put("Content-Type","application/json; charset=UTF-8");
+    	
+    	
+    	String ss= HttpUtil.sendPost("https://signin.apple.com/appleauth/auth/signin", "{\"accountName\":\"10000@qq.com\",\"password\":\"Jc19850304\",\"rememberMe\":false}",header);
+    	
+    	System.out.println(ss);
 	
 	}
 	
